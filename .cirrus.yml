@@ -1,0 +1,45 @@
+# global env values
+env:
+  CIRRUS_SHELL: bash -il
+  DARWIN_BUILD_IMAGE: ghcr.io/cirruslabs/macos-monterey-base:latest
+  LINUX_BUILD_IMAGE: nixos/nix:latest
+  NIX_INSTALL_URL: https://nixos.org/nix/install
+  NIX_PATH: nixpkgs=https://github.com/NixOS/nixpkgs/archive/nixpkgs-unstable.tar.gz
+
+index_template: &INDEX_TEMPLATE
+  # only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_TAG != '' || $CIRRUS_PR != '' || $CIRRUS_BUILD_SOURCE == ""
+  env:
+    PLATFORM: ${ARCH}-${CIRRUS_OS}
+  name: ${PLATFORM}-index
+  nix_index_script: nix-shell -p nix-index --command "nix-index --db ./${PLATFORM}-index 2>&1 | grep -v '+ generating index'" --option system ${PLATFORM} --extra-platforms ${PLATFORM}
+  index_db_artifacts:
+    name: $PLATFORM
+    path: ./$PLATFORM-index
+
+build_darwin_task:
+  macos_instance:
+    image: $DARWIN_BUILD_IMAGE
+  matrix:
+    - env:
+        ARCH: arm64
+    - env:
+        ARCH: x86_64
+  install_rosetta_script: softwareupdate --install-rosetta --agree-to-license
+  install_nix_script: arch -$ARCH bash <(curl -L "$NIX_INSTALL_URL") --daemon
+  <<: *INDEX_TEMPLATE
+
+build_linux_task:
+  matrix:
+    - arm_container:
+        image: $LINUX_BUILD_IMAGE
+        cpu: 4
+        memory: 8G
+      env:
+        ARCH: arm64
+    - container:
+        image: $LINUX_BUILD_IMAGE
+        cpu: 4
+        memory: 8G
+      env:
+        ARCH: x86_64
+  <<: *INDEX_TEMPLATE
