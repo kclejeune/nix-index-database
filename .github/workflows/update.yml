@@ -38,19 +38,19 @@ jobs:
     needs: index
     steps:
     - name: download x86_64-linux artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: x86_64-linux
         path: x86_64-linux-index
     - run: mv x86_64-linux-index/files index-x86_64-linux
     - name: download x86_64-darwin artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: x86_64-darwin
         path: x86_64-darwin-index
     - run: mv x86_64-darwin-index/files index-x86_64-darwin
     - name: download aarch64-linux artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: aarch64-linux
         path: aarch64-linux-index
